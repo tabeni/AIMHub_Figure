@@ -1,0 +1,14 @@
+VEMF,source,source_jp,color
+Prm_Ene_Bio_w_CCS,Bio_w/CCS,バイオマス_CCSあり,#bbffbb
+Prm_Ene_Bio_wo_CCS,Bio_wo/CCS,バイオマス_CCSなし,#66dd66
+Prm_Ene_Geo,Geothermal,地熱,#886644
+Prm_Ene_Win,Wind,風力,#66ccff
+Prm_Ene_Solar,Solar,太陽光,#ffee22
+Prm_Ene_Hyd,Hydrogy,水力,#0022ff
+Prm_Ene_Nuc,Nuclear,原子力,#8833ff
+Prm_Ene_Gas_w_CCS,Gas_w/CCS,天然ガス_CCSあり,#ff3300
+Prm_Ene_Gas_wo_CCS,Gas_wo/CCS,天然ガス_CCSなし,#ff6622
+Prm_Ene_Oil_w_CCS,Oil_w/CCS,石油_CCSあり,#bbbbbb
+Prm_Ene_Oil_wo_CCS,Oil_wo/CCS,石油_CCSなし,#888888
+Prm_Ene_Coa_w_CCS,Coa_w/CCS,石炭_CCSあり,#ffcc77
+Prm_Ene_Coa_wo_CCS,Coa_wo/CCS,石炭_CCSなし,#ee8833
