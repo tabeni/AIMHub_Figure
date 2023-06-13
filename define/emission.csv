@@ -1,0 +1,5 @@
+Emi_CO2_AFO,Emi_CO2_Ene_Dem_AFO,Emi_CO2_Ene_Dem_Com,Emi_CO2_Ene_Dem_Ind,Emi_CO2_Ene_Dem_Res,Emi_CO2_Ene_Dem_Tra,Emi_CO2_Ene_Sup,Emi_CO2_Ind_Pro,Emi_CO2_Oth,Emi_CO2_Ene_Pro_Use,Emi_CO2_Ene_Was
+Emi_CO2_AFO,Emi_CO2_Ene_Dem_AFO,Emi_CO2_Ene_Dem_Com,Emi_CO2_Ene_Dem_Ind,Emi_CO2_Ene_Dem_Res,Emi_CO2_Ene_Dem_Tra,Emi_CO2_Ene_Sup,Emi_CO2_Ind_Pro,Emi_CO2_Oth,Emi_CO2_Pro_Use,Emi_CO2_Was
+AFO,Dem_AFO,Dem_Com,Dem_Ind,Dem_Res,Dem_Tra,Ene_Sup,Ind_Pro,Oth,Pro_Use,Was
+バイオマス_CCSあり,バイオマス_CCSなし,地熱,水力,太陽光,風力,原子力,天然ガス_CCSあり,天然ガス_CCSなし,石油_CCSあり,石油_CCSなし
+green4,navy,gold,red,skyblue,grey,chocolate,green4,navy,gold,red
