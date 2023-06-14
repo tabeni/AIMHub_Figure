@@ -3,6 +3,7 @@
 #Date: 2023/6/13
 #Name: Osamu Nishiura
 
+# ------------------------------------------------------------------------------
 #Package load-------------------------------------------------------------------
 
 library(tidyverse)
@@ -16,19 +17,29 @@ if (dir.exists("../module") == "FALSE") {dir.create("../module")}
 
 #Setting import-----------------------------------------------------------------
 
-df_path    <- read_csv("../define/path.csv")
-df_filter  <- read_csv("../define/filter.csv")
-df_pri     <- read_csv("../define/primary_energy.csv")
-df_sec     <- read_csv("../define/secondary_energy.csv")
-df_fin     <- read_csv("../define/final_energy.csv")
-df_emi     <- read_csv("../define/emission.csv")
+df_path    <- read_csv("../define/path.csv", locale = locale(encoding = "shift-jis"))
+df_filter  <- read_csv("../define/filter.csv", locale = locale(encoding = "shift-jis"))
+df_pri     <- read_csv("../define/primary_energy.csv", locale = locale(encoding = "shift-jis"))
+df_sec     <- read_csv("../define/secondary_energy.csv", locale = locale(encoding = "shift-jis"))
+df_fin     <- read_csv("../define/final_energy.csv", locale = locale(encoding = "shift-jis"))
+df_emi     <- read_csv("../define/emission.csv", locale = locale(encoding = "shift-jis"))
+df_val     <- read_csv("../define/value_added.csv", locale = locale(encoding = "shift-jis"))
 
 my_theme<-theme(
   panel.background = element_rect(fill = "transparent", colour = "black"),
   panel.grid = element_blank(),
   strip.background = element_blank(),
-  legend.key = element_blank()
+  legend.key = element_blank(),
+  strip.text.y = element_text(size = 15), 
+  strip.text.x = element_text(size = 15),
+  axis.title = element_text(size = 25),
+  legend.title= element_text(size = 20),
+  legend.text= element_text(size = 20),
+  axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 15),
+  axis.text.y = element_text(size = 20)
 )
+#legend.key.size = unit(1, 'cm'),
+#legend.position ="right",
 
 #Data import--------------------------------------------------------------------
 
@@ -38,27 +49,17 @@ df_iamc<-rgdx.param(paste(df_path[df_path$name=="IAMC",]$path,"global_17_IAMC.gd
          str_detect(REMF, paste(df_filter$REMF,collapse="|")))%>%
   mutate(year=as.numeric(as.character(YEMF)))
 
-#Figuress-----------------------------------------------------------------------
+#Figures------------------------------------------------------------------------
 #GDP and Consumption loss-------------------------------------------------------
 
 p <- df_iamc%>%
   filter(VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Cns_Los_rat",REMF=="World",YEMF!="2010",YEMF!="2015")%>%
-  ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO))
+  ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 
 p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1)
-p <- p + geom_line(linewidth=1.2)
-p <- p + labs(x="Year", y="Economic loss (%)",color="Scenarios") 
+p <- p + geom_line()
 p <- p + geom_hline(yintercept=0,color = "grey")
+p <- p + labs(x="Year", y="Economic loss (%)",color="Scenarios") 
 p <- p + my_theme
-#p <- p + scale_x_discrete(label=lb_x_r)
-p <- p + theme(legend.key.size = unit(1, 'cm'),
-               legend.position ="right",
-               strip.text.y = element_text(size = 20),
-               strip.text.x = element_text(size = 20),
-               axis.title = element_text(size = 20),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
 png(paste(df_path[df_path$name=="figure",]$path,"GDP_HH_loss.png",sep="/"), width = 5000, height = 3000,res = 300)
 print(p)
 dev.off()
@@ -71,23 +72,16 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_pri[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
-p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
 p <- p  + scale_fill_manual(values = df_pri[4,], labels = df_pri[2,])
-p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
+p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p + labs(x="Year", y="Primary energy (EJ/year)", fill = "Source")
+p <- p　+ my_theme 
 png(paste(df_path[df_path$name=="figure",]$path,"primary_energy.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
-#Secandary Energy--------------------------------------------------------------
+#Secoundary Energy--------------------------------------------------------------
 #Electricity
 p <- df_iamc%>%
   filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
@@ -96,17 +90,10 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_sec[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
-p <- p　+ geom_hline(yintercept=0,color = "grey")
-p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p <- p  + geom_bar(stat="identity",aes(fill=VEMF))
 p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
 p <- p + labs(x="Year", y="Power generation (EJ/year)", fill = "Source")
 png(paste(df_path[df_path$name=="figure",]$path,"Electricity.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
@@ -120,17 +107,10 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_sec[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
-p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
 p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
 p <- p + labs(x="Year", y="Power generation (EJ/year)", fill = "Source")
 png(paste(df_path[df_path$name=="figure",]$path,"Hydrogen.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
@@ -146,18 +126,11 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_fin[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
-p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
 p <- p  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
-p <- p + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
+p <- p  + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
 png(paste(df_path[df_path$name=="figure",]$path,"Final_energy.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
@@ -171,18 +144,11 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_fin[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
+p <- p  + geom_bar(stat="identity",aes(fill=VEMF))
 p <- p　+ geom_hline(yintercept=0,color = "grey")
-p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
 p <- p  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
 p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
-p <- p + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
+p <- p  + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
 png(paste(df_path[df_path$name=="figure",]$path,"Final_energy_transport.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
@@ -196,23 +162,36 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_fin[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
-p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
 p <- p  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
-p <- p + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
+p <- p  + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
 png(paste(df_path[df_path$name=="figure",]$path,"Final_energy_industry.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
 #Value added--------------------------------------------------------------------
+
+p <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
+  filter(VEMF %in% df_val[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_val[1,]))%>%
+  pivot_wider(names_from = SCENARIO, values_from = IAMC_Template)%>%
+  mutate(SSP2_500C_CACN_NoCC = (SSP2_500C_CACN_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC,
+         SSP2_500C_CACN_DAC_NoCC = (SSP2_500C_CACN_DAC_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC,
+         SSP2_500C_CACN_Synf_NoCC = (SSP2_500C_CACN_Synf_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC)%>%
+  select(-c("SSP2_BaU_NoCC"))%>%
+  pivot_longer(cols = -c(VEMF, REMF, YEMF, year), names_to = "SCENARIO", values_to = "IAMC_Template")%>%
+  ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=2)
+p <- p + geom_line()
+p <- p + geom_hline(yintercept=0,color = "grey")
+p <- p + labs(x="Year", y="Economic loss (%)",color="Scenarios") 
+p <- p + my_theme
+png(paste(df_path[df_path$name=="figure",]$path,"value_added_loss.png",sep="/"), width = 6000, height = 3000,res = 300)
+print(p)
+dev.off()
 
 #CO2 emission-------------------------------------------------------------------
 
@@ -222,17 +201,10 @@ p <- df_iamc%>%
   mutate(VEMF = factor(VEMF, levels=df_emi[1,]))%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
-p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
 p <- p  + scale_fill_manual(values = c("green4","blue","red","yellow","purple","chocolate","navy","grey","pink","skyblue","gold"))
+p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
-p <- p　+ theme(strip.text.y = element_text(size = 15), 
-               strip.text.x = element_text(size = 15),
-               axis.title = element_text(size = 25),
-               legend.title= element_text(size = 20),
-               legend.text= element_text(size = 20),
-               axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 20),
-               axis.text.y = element_text(size = 20))
 p <- p + labs(x="Year", y="CO2 emission", fill = "source")
 png(paste(df_path[df_path$name=="figure",]$path,"emission.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
@@ -255,6 +227,19 @@ dev.off()
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+#TRB----------------------------------------------------------------------------
 
 
 

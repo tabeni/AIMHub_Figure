@@ -1,0 +1,5 @@
+Val_Add_Agr,Val_Add_Che,Val_Add_Ind_Ene,Val_Add_I_S,Val_Add_Non_Fer_Met,Val_Add_Non_Met_Min,Val_Add_Oth_Ind,Val_Add_Pul_Pap,Val_Add_Ser
+Val_Add_Agr,Val_Add_Che,Val_Add_Ind_Ene,Val_Add_I_S,Val_Add_Non_Fer_Met,Val_Add_Non_Met_Min,Val_Add_Oth_Ind,Val_Add_Pul_Pap,Val_Add_Ser
+Agriculture,Chemical,Energy,Iron_Steel,Non_Ferrous_Metal,Non_Metallic_Mineral,Other_Industry,Pulp_Paper,Service
+農業,化学,エネルギー,鉄鋼,非鉄金属,非金属,その他,製紙,サービス
+#bbffbb,#66dd66,#886644,#0022ff,#ffee22,#88ddff,#8833ff,#dd9977,#dd3300
