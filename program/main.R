@@ -64,6 +64,19 @@ png(paste(df_path[df_path$name=="figure",]$path,"GDP_HH_loss.png",sep="/"), widt
 print(p)
 dev.off()
 
+p <- df_iamc%>%
+  filter(YEMF=="2050",YEMF!="2015",VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Cns_Los_rat")%>%
+  ggplot(aes(x=REMF , y=IAMC_Template ))
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1)
+p <- p  + geom_bar(stat="identity",position = "dodge",  aes(fill=SCENARIO)) 
+#p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
+p <- p　+ my_theme 
+p <- p + labs(x="Year", y="Synthetic fuel production (EJ/year)", fill = "Source")
+png(paste(df_path[df_path$name=="figure",]$path,"Economic_loss_region.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1800+1000, height = 3000,res = 300)
+print(p)
+dev.off()
+
 #Primary Energy-----------------------------------------------------------------
 
 p <- df_iamc%>%
@@ -113,6 +126,35 @@ p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="Power generation (EJ/year)", fill = "Source")
 png(paste(df_path[df_path$name=="figure",]$path,"Hydrogen.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+print(p)
+dev.off()
+
+#Synfuel
+p <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",VEMF=="Sec_Ene_Syn")%>%
+  ggplot(aes(x=YEMF , y=IAMC_Template ))
+p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
+p <- p  + geom_bar(stat="identity") 
+#p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
+p <- p　+ my_theme 
+p <- p + labs(x="Year", y="Synthetic fuel production (EJ/year)", fill = "Source")
+png(paste(df_path[df_path$name=="figure",]$path,"Synfuel.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1000+1000, height = 3000,res = 300)
+print(p)
+dev.off()
+
+p <- df_iamc%>%
+  filter(YEMF=="2050",YEMF!="2015",VEMF=="Fin_Ene_Tra_Syn"|VEMF=="Fin_Ene_Tra")%>%
+  pivot_wider(names_from = VEMF, values_from = IAMC_Template)%>%
+  mutate(IAMC_Template=Fin_Ene_Tra_Syn*100/Fin_Ene_Tra)%>%
+  ggplot(aes(x=REMF , y=IAMC_Template ))
+#p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
+p <- p  + geom_bar(stat="identity",position = "dodge",  aes(fill=SCENARIO)) 
+#p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
+p <- p　+ my_theme 
+p <- p + labs(x="Year", y="Synthetic fuel production (EJ/year)", fill = "Source")
+png(paste(df_path[df_path$name=="figure",]$path,"Synfuel_region.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1000+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -180,7 +222,8 @@ p <- df_iamc%>%
   pivot_wider(names_from = SCENARIO, values_from = IAMC_Template)%>%
   mutate(SSP2_500C_CACN_NoCC = (SSP2_500C_CACN_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC,
          SSP2_500C_CACN_DAC_NoCC = (SSP2_500C_CACN_DAC_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC,
-         SSP2_500C_CACN_Synf_NoCC = (SSP2_500C_CACN_Synf_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC)%>%
+         SSP2_500C_CACN_Synf_NoCC = (SSP2_500C_CACN_Synf_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC,
+         SSP2_500C_CACN_Synf_Subs_NoCC = (SSP2_500C_CACN_Synf_Subs_NoCC - SSP2_BaU_NoCC)*100/SSP2_BaU_NoCC)%>%
   select(-c("SSP2_BaU_NoCC"))%>%
   pivot_longer(cols = -c(VEMF, REMF, YEMF, year), names_to = "SCENARIO", values_to = "IAMC_Template")%>%
   ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 

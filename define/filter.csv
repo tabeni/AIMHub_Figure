@@ -10,7 +10,7 @@ YEMF,VEMF,REMF
 2045,^Sec_Ene_Ele,XSE
 2050,^Sec_Ene_Hyd,XSA
 ,^Val_Add,CAN
-,,BRA
+,^Sec_Ene_Syn,BRA
 ,,XLM
 ,,CIS
 ,,XME
