@@ -4,9 +4,19 @@
 #Name: Osamu Nishiura
 
 # ------------------------------------------------------------------------------
+#Setting------------------------------------------------------------------------
+#SCENARIO
+df_sce <- data.frame(c("SSP2_BaU_NoCC","SSP2_500C_CACN_NoCC","SSP2_500C_CACN_Synf_NoCC"),
+                     c("Baseline","1.5C_BIO","1.5C_DAC"))
+
+colnames(df_sce) <- c("SCENARIO","SCENARIO2")
+v_sce <- df_sce[[2]]
+names(v_sce) <- df_sce[[1]]
+
 #Package load-------------------------------------------------------------------
 
 library(tidyverse)
+library(gridExtra)
 library(gdxrrw)
 
 #Directory Preparation----------------------------------------------------------
@@ -15,7 +25,7 @@ if (dir.exists("../output/figure/main") == "FALSE") {dir.create("../output/figur
 if (dir.exists("../output/figure/other") == "FALSE") {dir.create("../output/figure/other", recursive = T)}
 if (dir.exists("../module") == "FALSE") {dir.create("../module")}
 
-#Setting import-----------------------------------------------------------------
+#define import-----------------------------------------------------------------
 
 df_path    <- read_csv("../define/path.csv", locale = locale(encoding = "shift-jis"))
 df_filter  <- read_csv("../define/filter.csv", locale = locale(encoding = "shift-jis"))
@@ -24,6 +34,7 @@ df_sec     <- read_csv("../define/secondary_energy.csv", locale = locale(encodin
 df_fin     <- read_csv("../define/final_energy.csv", locale = locale(encoding = "shift-jis"))
 df_emi     <- read_csv("../define/emission.csv", locale = locale(encoding = "shift-jis"))
 df_val     <- read_csv("../define/value_added.csv", locale = locale(encoding = "shift-jis"))
+df_lan     <- read_csv("../define/landuse.csv", locale = locale(encoding = "shift-jis"))
 
 my_theme<-theme(
   panel.background = element_rect(fill = "transparent", colour = "black"),
@@ -33,47 +44,51 @@ my_theme<-theme(
   strip.text.y = element_text(size = 15), 
   strip.text.x = element_text(size = 15),
   axis.title = element_text(size = 25),
-  legend.title= element_text(size = 20),
-  legend.text= element_text(size = 20),
+  legend.title = element_text(size = 20),
+  legend.text = element_text(size = 20),
   axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5,size = 15),
   axis.text.y = element_text(size = 20)
 )
-#legend.key.size = unit(1, 'cm'),
-#legend.position ="right",
+#legend.key.size = unit(1, 'cm'),legend.position ="right",
 
 #Data import--------------------------------------------------------------------
 
 df_iamc<-rgdx.param(paste(df_path[df_path$name=="IAMC",]$path,"global_17_IAMC.gdx",sep="/"), "IAMC_Template")%>%
   filter(str_detect(VEMF, paste(df_filter$VEMF,collapse="|")),
          str_detect(YEMF, paste(df_filter$YEMF,collapse="|")),
-         str_detect(REMF, paste(df_filter$REMF,collapse="|")))%>%
-  mutate(year=as.numeric(as.character(YEMF)))
+         str_detect(REMF, paste(df_filter$REMF,collapse="|")),
+         SCENARIO %in% df_sce[[1]])%>%
+  left_join(df_sce)%>%
+  mutate(year = as.numeric(as.character(YEMF)),
+         SCENARIO = factor(SCENARIO,levels = df_sce[[1]]),
+         SCENARIO2 = factor(SCENARIO2,levels = df_sce[[2]]))
 
 #Figures------------------------------------------------------------------------
 #GDP and Consumption loss-------------------------------------------------------
 
 p <- df_iamc%>%
-  filter(VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Cns_Los_rat",REMF=="World",YEMF!="2010",YEMF!="2015")%>%
+  filter(VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Cns_Los_rat"|VEMF=="Pol_Cos_Equ_Var_rat",REMF=="World",YEMF!="2010",YEMF!="2015")%>%
   ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 
-p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1)
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1,labeller = as_labeller(c(Pol_Cos_GDP_Los_rat="GDP",Pol_Cos_Cns_Los_rat="Consumption",Pol_Cos_Equ_Var_rat="Equivalent variation")))
 p <- p + geom_line()
+p <- p + scale_color_hue(labels = df_sce[[2]])
 p <- p + geom_hline(yintercept=0,color = "grey")
 p <- p + labs(x="Year", y="Economic loss (%)",color="Scenarios") 
 p <- p + my_theme
-png(paste(df_path[df_path$name=="figure",]$path,"GDP_HH_loss.png",sep="/"), width = 5000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/GDP_HH_loss.png",sep="/"), width = 5000, height = 2000,res = 300)
 print(p)
 dev.off()
 
 p <- df_iamc%>%
-  filter(YEMF=="2050",YEMF!="2015",VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Cns_Los_rat")%>%
+  filter(YEMF=="2050",YEMF!="2015",VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Cns_Los_rat"|VEMF=="Pol_Cos_Equ_Var_rat")%>%
   ggplot(aes(x=REMF , y=IAMC_Template ))
-p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1)
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1,labeller = as_labeller(c(Pol_Cos_GDP_Los_rat="GDP",Pol_Cos_Cns_Los_rat="Consumption",Pol_Cos_Equ_Var_rat="Equivalent variation")))
 p <- p  + geom_bar(stat="identity",position = "dodge",  aes(fill=SCENARIO)) 
-#p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
+p <- p + scale_fill_hue(labels = df_sce[[2]])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="Synthetic fuel production (EJ/year)", fill = "Source")
-png(paste(df_path[df_path$name=="figure",]$path,"Economic_loss_region.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1800+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Economic_loss_region.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1800+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -90,7 +105,7 @@ p <- p  + scale_fill_manual(values = df_pri[4,], labels = df_pri[2,])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p + labs(x="Year", y="Primary energy (EJ/year)", fill = "Source")
 p <- p　+ my_theme 
-png(paste(df_path[df_path$name=="figure",]$path,"primary_energy.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/primary_energy.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -108,7 +123,7 @@ p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="Power generation (EJ/year)", fill = "Source")
-png(paste(df_path[df_path$name=="figure",]$path,"Electricity.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Electricity.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -125,7 +140,7 @@ p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="Power generation (EJ/year)", fill = "Source")
-png(paste(df_path[df_path$name=="figure",]$path,"Hydrogen.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Hydrogen.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -139,7 +154,7 @@ p <- p  + geom_bar(stat="identity")
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="Synthetic fuel production (EJ/year)", fill = "Source")
-png(paste(df_path[df_path$name=="figure",]$path,"Synfuel.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1000+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Synfuel.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1000+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -154,7 +169,7 @@ p <- p  + geom_bar(stat="identity",position = "dodge",  aes(fill=SCENARIO))
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="Synthetic fuel production (EJ/year)", fill = "Source")
-png(paste(df_path[df_path$name=="figure",]$path,"Synfuel_region.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1000+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Synfuel_region.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1000+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -173,7 +188,7 @@ p <- p  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p  + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
-png(paste(df_path[df_path$name=="figure",]$path,"Final_energy.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Final_energy.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -191,7 +206,7 @@ p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
 p <- p　+ my_theme 
 p <- p  + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
-png(paste(df_path[df_path$name=="figure",]$path,"Final_energy_transport.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Final_energy_transport.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -209,7 +224,7 @@ p <- p  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p  + labs(x="Year", y="Final energy (EJ/year)", fill = "fuel")
-png(paste(df_path[df_path$name=="figure",]$path,"Final_energy_industry.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Final_energy_industry.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -232,7 +247,7 @@ p <- p + geom_line()
 p <- p + geom_hline(yintercept=0,color = "grey")
 p <- p + labs(x="Year", y="Economic loss (%)",color="Scenarios") 
 p <- p + my_theme
-png(paste(df_path[df_path$name=="figure",]$path,"value_added_loss.png",sep="/"), width = 6000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/value_added_loss.png",sep="/"), width = 6000, height = 3000,res = 300)
 print(p)
 dev.off()
 
@@ -249,7 +264,7 @@ p <- p  + scale_fill_manual(values = c("green4","blue","red","yellow","purple","
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
 p <- p + labs(x="Year", y="CO2 emission", fill = "source")
-png(paste(df_path[df_path$name=="figure",]$path,"emission.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/emission.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
 
