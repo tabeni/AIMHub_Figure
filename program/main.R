@@ -18,6 +18,7 @@ names(v_sce) <- df_sce[[1]]
 library(tidyverse)
 library(gridExtra)
 library(gdxrrw)
+library(ggpattern)
 
 #Directory Preparation----------------------------------------------------------
 

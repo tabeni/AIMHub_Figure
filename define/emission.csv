@@ -1,5 +1,7 @@
 Emi_CO2_AFO,Emi_CO2_Ene_Dem_AFO,Emi_CO2_Ene_Dem_Com,Emi_CO2_Ene_Dem_Ind,Emi_CO2_Ene_Dem_Res,Emi_CO2_Ene_Dem_Tra,Emi_CO2_Ene_Sup,Emi_CO2_Ind_Pro,Emi_CO2_Oth,Emi_CO2_Pro_Use,Emi_CO2_Was
 Emi_CO2_AFO,Emi_CO2_Ene_Dem_AFO,Emi_CO2_Ene_Dem_Com,Emi_CO2_Ene_Dem_Ind,Emi_CO2_Ene_Dem_Res,Emi_CO2_Ene_Dem_Tra,Emi_CO2_Ene_Sup,Emi_CO2_Ind_Pro,Emi_CO2_Oth,Emi_CO2_Pro_Use,Emi_CO2_Was
 AFOLU,Energy use in AFOLU,Energy use in Commercial,Energy use in Industry,Energy use in Residential,Energy use in Transport,Energy supply,Industrial process,Direct air capture,Product use,Waste
-バイオマス_CCSあり,バイオマス_CCSなし,地熱,水力,太陽光,風力,原子力,天然ガス_CCSあり,天然ガス_CCSなし,石油_CCSあり,石油_CCSなし
+農畜産土地利用,エネルギー消費|農畜産,エネルギー消費|サービス,エネルギー消費|製造,エネルギー消費|住居,エネルギー消費|輸送,エネルギー供給,製造段階,大気直接回収,製品仕様,廃棄物
 green4,olivedrab1,skyblue,red,gold,grey,chocolate,pink,navy,yellow,orange
+black,grey60,grey88,grey88,white,white,grey88,white,white,grey60,grey40
+none,none,crosshatch,stripe,circle,none,none,stripe,crosshatch,stripe,none

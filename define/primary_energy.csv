@@ -3,3 +3,5 @@ Prm_Ene_Bio_w_CCS,Prm_Ene_Bio_wo_CCS,Prm_Ene_Geo,Prm_Ene_Hyd,Prm_Ene_Solar,Prm_E
 Bio_w/CCS,Bio_wo/CCS,Geothermal,Hydrogy,Solar,Wind,Nuclear,Gas_w/CCS,Gas_wo/CCS,Oil_w/CCS,Oil_wo/CCS,Coa_w/CCS,Coa_wo/CCS
 バイオマス_CCSあり,バイオマス_CCSなし,地熱,水力,太陽光,風力,原子力,天然ガス_CCSあり,天然ガス_CCSなし,石油_CCSあり,石油_CCSなし,石炭_CCSあり,石炭_CCSなし
 #bbffbb,#66dd66,#886644,#0022ff,#ffee22,#88ddff,#8833ff,#dd9977,#dd3300,#bbbbbb,#888888,#ddcc77,#bb8833
+black,grey60,grey88,grey88,white,white,grey88,white,white,grey60,grey40,grey88,grey60
+none,none,crosshatch,stripe,circle,none,none,stripe,crosshatch,stripe,none,circle,crosshatch
