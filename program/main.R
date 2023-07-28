@@ -147,7 +147,7 @@ dev.off()
 
 #Synfuel
 p <- df_iamc%>%
-  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",VEMF=="Sec_Ene_Syn")%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",VEMF=="Sec_Ene_Liq_Hyd_syn")%>%
   ggplot(aes(x=YEMF , y=IAMC_Template ))
 p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
 p <- p  + geom_bar(stat="identity") 
@@ -160,9 +160,9 @@ print(p)
 dev.off()
 
 p <- df_iamc%>%
-  filter(YEMF=="2050",YEMF!="2015",VEMF=="Fin_Ene_Tra_Syn"|VEMF=="Fin_Ene_Tra")%>%
+  filter(YEMF=="2050",YEMF!="2015",VEMF=="Fin_Ene_Tra_Liq_Hyd_syn"|VEMF=="Fin_Ene_Tra")%>%
   pivot_wider(names_from = VEMF, values_from = IAMC_Template)%>%
-  mutate(IAMC_Template=Fin_Ene_Tra_Syn*100/Fin_Ene_Tra)%>%
+  mutate(IAMC_Template=Fin_Ene_Tra_Liq_Hyd_syn*100/Fin_Ene_Tra)%>%
   ggplot(aes(x=REMF , y=IAMC_Template ))
 #p <- p  + facet_grid( ~ SCENARIO ,scales="fixed")
 p <- p  + geom_bar(stat="identity",position = "dodge",  aes(fill=SCENARIO)) 

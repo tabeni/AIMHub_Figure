@@ -12,7 +12,7 @@ YEMF,VEMF,REMF
 ,^Val_Add,CAN
 ,^Sec_Ene_Syn,BRA
 ,^Lan_Cov,XLM
-,,CIS
+,^Sec_Ene_Liq,CIS
 ,,XME
 ,,XNF
 ,,XAF
