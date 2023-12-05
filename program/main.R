@@ -12,6 +12,7 @@ df_sce <- data.frame(c("SSP2_BaU_NoCC","SSP2_500C_CACN_NoCC","SSP2_500C_CACN_DAC
 colnames(df_sce) <- c("SCENARIO","SCENARIO2")
 v_sce <- df_sce[[2]]
 names(v_sce) <- df_sce[[1]]
+v_REMF <- c("World","USA","XE25","XER","TUR","XOC","CHN","IND","JPN","XSE","XSA","CAN","BRA","XLM","CIS","XME","XNF","XAF")
 
 #Package load-------------------------------------------------------------------
 
@@ -65,6 +66,48 @@ df_iamc<-rgdx.param(paste(df_path[df_path$name=="IAMC",]$path,"global_17_IAMC.gd
          SCENARIO = factor(SCENARIO,levels = df_sce[[1]]),
          SCENARIO2 = factor(SCENARIO2,levels = df_sce[[2]]))
 
+df_HH<-data.frame()
+for (i in df_sce$SCENARIO){
+df_HH<-rgdx.param(paste(df_path[df_path$name=="cbnal0",]$path,paste("global_17_",i,".gdx",sep=""),sep="/"), "PQH_load")%>%
+  left_join(bind_rows(rgdx.param(paste(df_path[df_path$name=="cbnal0",]$path,paste("global_17_",i,".gdx",sep=""),sep="/"), "QH_load"),rgdx.param(paste(df_path[df_path$name=="cbnal0",]$path,paste("global_17_",i,".gdx",sep=""),sep="/"), "QENESENET_load")), by = c("i1","i2","i3","i4"))%>%
+  filter(i3!="COM_CRL",str_detect(i1, paste(df_filter$YEMF,collapse="|")))%>%
+  mutate(value=value.x*value.y)%>%
+  group_by(i1,i3)%>%
+  summarise(value=sum(value), volume=sum(value.y))%>%
+  ungroup()%>%
+  mutate(price=value/volume,
+         Scenario=i)%>%
+  bind_rows(df_HH)
+}
+df_HH<-df_HH%>%
+  filter(i1=="2005")%>%
+  select(i3,price,Scenario)%>%
+  rename("i3"=i3,"price2"=price,"Scenario"=Scenario)%>%
+  right_join(df_HH)%>%
+  mutate(prind=price/price2)%>%
+  select(i1,i3,prind,Scenario)
+
+df_HHE<-data.frame()
+for (i in df_sce$SCENARIO){
+  df_HHE<-rgdx.param(paste(df_path[df_path$name=="cbnal0",]$path,paste("global_17_",i,".gdx",sep=""),sep="/"), "QCH_load")%>%
+    filter(str_detect(i1, paste(df_filter$YEMF,collapse="|")))%>%
+    mutate(Scenario=i)%>%
+    group_by(i1,i3,i4,Scenario)%>%
+    summarise(value=sum(value))%>%
+    ungroup()%>%
+    bind_rows(df_HHE)
+}
+
+df_HHER<-df_HHE%>%
+  filter(Scenario=="SSP2_BaU_NoCC")%>%
+  select(-c("Scenario"))%>%
+  left_join(df_HHE,by = c("i1","i3","i4"))%>%
+  mutate(Ratio = (value.y-value.x)*100/value.x)%>%
+  select(c("i1","i3","Scenario","Ratio"))
+
+
+
+  
 #Figures------------------------------------------------------------------------
 #GDP and Consumption loss-------------------------------------------------------
 
@@ -117,28 +160,90 @@ dev.off()
 #commodity price----------------------------------------------------------------
 
 p <- df_iamc%>%
-  filter(VEMF=="Prc_Agr_NonEneCro_and_Liv_Ind"|VEMF=="Prc_Fin_Ene_Res_Ele"|VEMF=="Prc_Fin_Ene_Res_Gas_Nat_Gas"|VEMF=="Prc_Fin_Ene_Res_Liq_Bio"|VEMF=="Prc_Fin_Ene_Res_Liq_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Liq_Oil"|VEMF=="Prc_Fin_Ene_Res_SolidsCoa",REMF=="World",YEMF!="2010",YEMF!="2015")%>%
+  filter(VEMF=="Prc_Agr_NonEneCro_and_Liv_Ind"|VEMF=="Prc_Sec_Ene_Hyd"|VEMF=="Prc_Fin_Ene_Res_Ele"|VEMF=="Prc_Fin_Ene_Res_Gas_Nat_Gas"|VEMF=="Prc_Fin_Ene_Res_Liq_Bio"|VEMF=="Prc_Fin_Ene_Res_Liq_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Gas_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Liq_Oil"|VEMF=="Prc_Fin_Ene_Res_SolidsCoa",REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
   ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 
-#p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1,labeller = as_labeller(c(Pol_Cos_GDP_Los_rat="GDP",Pol_Cos_Cns_Los_rat="Consumption",Pol_Cos_Equ_Var_rat="Equivalent variation")))
-p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=2)
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=2,labeller = as_labeller(c(Prc_Agr_NonEneCro_and_Liv_Ind="Food",
+                                                                             Prc_Sec_Ene_Hyd="Hydrogen",
+                                                                             Prc_Fin_Ene_Res_Ele="Electricity",
+                                                                             Prc_Fin_Ene_Res_SolidsCoa="Solids_Coal",
+                                                                             Prc_Fin_Ene_Res_Gas_Nat_Gas="Gas_NaturalGas",
+                                                                             Prc_Fin_Ene_Res_Liq_Bio="Liquid_Biomass",
+                                                                             Prc_Fin_Ene_Res_Liq_Hyd_syn="Liquid_Synfuel",
+                                                                             Prc_Fin_Ene_Res_Liq_Oil="Liquid_Oil",
+                                                                             Prc_Fin_Ene_Res_Gas_Hyd_syn="Gas_Synfuel")))
+#p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=2)
 p <- p + geom_line()
 p <- p + scale_color_hue(labels = v_sce)
 p <- p + geom_hline(yintercept=0,color = "grey")
 p <- p + labs(x="Year", y="Commodity price",color="Scenarios") 
 p <- p + my_theme
-png(paste(df_path[df_path$name=="figure",]$path,"main/price.png",sep="/"), width = 6000, height = 3000,res = 300)
+png(paste(df_path[df_path$name=="figure",]$path,"main/Food_Ene_Price.png",sep="/"), width = 6000, height = 3000,res = 300)
+print(p)
+dev.off()
+
+
+p <- df_iamc%>%
+  filter(VEMF=="Prc_Sec_Ene_Hyd"|VEMF=="Prc_Fin_Ene_Res_Ele"|VEMF=="Prc_Fin_Ene_Res_Gas_Nat_Gas"|VEMF=="Prc_Fin_Ene_Res_Liq_Bio"|VEMF=="Prc_Fin_Ene_Res_Liq_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Gas_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Liq_Oil"|VEMF=="Prc_Fin_Ene_Res_SolidsCoa",REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
+  ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=2,labeller = as_labeller(c(Prc_Sec_Ene_Hyd="Hydrogen",
+                                                                             Prc_Fin_Ene_Res_Ele="Electricity",
+                                                                             Prc_Fin_Ene_Res_SolidsCoa="Solids_Coal",
+                                                                             Prc_Fin_Ene_Res_Gas_Nat_Gas="Gas_NaturalGas",
+                                                                             Prc_Fin_Ene_Res_Liq_Bio="Liquid_Biomass",
+                                                                             Prc_Fin_Ene_Res_Liq_Hyd_syn="Liquid_Synfuel",
+                                                                             Prc_Fin_Ene_Res_Liq_Oil="Liquid_Oil",
+                                                                             Prc_Fin_Ene_Res_Gas_Hyd_syn="Gas_Synfuel")))
+#p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=2)
+p <- p + geom_line()
+p <- p + scale_color_hue(labels = v_sce)
+p <- p + geom_hline(yintercept=0,color = "grey")
+p <- p + labs(x="Year", y="Commodity price including carbon tax (US$/GJ)",color="Scenarios") 
+p <- p + my_theme
+png(paste(df_path[df_path$name=="figure",]$path,"main/Energy_Price.png",sep="/"), width = 6000, height = 3000,res = 300)
 print(p)
 dev.off()
 
 df_iamc%>%
-  filter(VEMF=="Prc_Agr_NonEneCro_and_Liv_Ind"|VEMF=="Prc_Fin_Ene_Res_Ele"|VEMF=="Prc_Fin_Ene_Res_Gas_Nat_Gas"|VEMF=="Prc_Fin_Ene_Res_Liq_Bio"|VEMF=="Prc_Fin_Ene_Res_Liq_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Liq_Oil"|VEMF=="Prc_Fin_Ene_Res_SolidsCoa",REMF=="World",YEMF=="2050")%>%  
+  filter(VEMF=="Prc_Sec_Ene_Hyd"|VEMF=="Prc_Fin_Ene_Res_Ele"|VEMF=="Prc_Fin_Ene_Res_Gas_Nat_Gas"|VEMF=="Prc_Fin_Ene_Res_Liq_Bio"|VEMF=="Prc_Fin_Ene_Res_Liq_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Gas_Hyd_syn"|VEMF=="Prc_Fin_Ene_Res_Liq_Oil"|VEMF=="Prc_Fin_Ene_Res_SolidsCoa",REMF=="World",YEMF=="2050")%>%  
   select(c("VEMF","SCENARIO2","IAMC_Template"))%>%
   pivot_wider(names_from = VEMF, values_from = IAMC_Template)%>%
   write_csv(paste(df_path[df_path$name=="table",]$path,"main/Price.csv",sep="/"))
 
 
+p <- df_HH%>%
+  ggplot(aes(x=i1 , y = prind, color = Scenario,group = Scenario)) 
+p <- p + facet_wrap(. ~ i3, scales="free", nrow=3)
+p <- p + geom_line()
+p <- p + scale_color_hue(labels = v_sce)
+p <- p + labs(x="Year", y="Commodity price including carbon tax (2005=1)",color="Scenarios") 
+p <- p + my_theme
+png(paste(df_path[df_path$name=="figure",]$path,"main/Price.png",sep="/"), width = 8000, height = 5000,res = 300)
+print(p)
+dev.off()
 
 
+p <- df_HHER%>%
+  ggplot(aes(x=i1 , y = Ratio, color = Scenario,group = Scenario)) 
+p <- p + facet_wrap(. ~ i3, scales="free", nrow=6)
+p <- p + geom_line()
+p <- p + scale_color_hue(labels = v_sce)
+p <- p + labs(x="Year", y="Expenditure change",color="Scenarios") 
+p <- p + my_theme
+png(paste(df_path[df_path$name=="figure",]$path,"main/Expenditure_change.png",sep="/"), width = 8000, height = 10000,res = 300)
+print(p)
+dev.off()
+
+
+p <- df_HHE%>%
+  ggplot(aes(x=i1 , y = value, color = Scenario,group = Scenario)) 
+p <- p + facet_wrap(. ~ i3, scales="free", nrow=6)
+p <- p + geom_line()
+p <- p + scale_color_hue(labels = v_sce)
+p <- p + labs(x="Year", y="Expenditure",color="Scenarios") 
+p <- p + my_theme
+png(paste(df_path[df_path$name=="figure",]$path,"main/Expenditure.png",sep="/"), width = 8000, height = 10000,res = 300)
+print(p)
+dev.off()
 
 
 #Primary Energy-----------------------------------------------------------------
@@ -167,7 +272,7 @@ df_iamc%>%
   write_csv(paste(df_path[df_path$name=="table",]$path,"main/primary_energy.csv",sep="/"))
 
 
-#Secoundary Energy--------------------------------------------------------------
+#Secondary Energy--------------------------------------------------------------
 #Electricity
 p <- df_iamc%>%
   filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
@@ -236,7 +341,7 @@ p <- p  + geom_bar(stat="identity",aes(fill=VEMF))
 p <- p  + scale_fill_manual(values = df_sec[4,], labels = df_sec[2,])
 p <- p　+ geom_hline(yintercept=0,color = "grey")
 p <- p　+ my_theme 
-p <- p + labs(x="Year", y="Power generation (EJ/year)", fill = "Source")
+p <- p + labs(x="Year", y="Hydrogen production (EJ/year)", fill = "Source")
 png(paste(df_path[df_path$name=="figure",]$path,"main/Hydrogen.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
 print(p)
 dev.off()
@@ -412,6 +517,7 @@ df_iamc%>%
 
 
 #Value added--------------------------------------------------------------------
+#NEED TO BE MODIFIED---
 
 p <- df_iamc%>%
   filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
@@ -485,6 +591,63 @@ df_iamc%>%
 
 
 
+
+
+#Land use-----------------------------------------
+
+p <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
+  filter(VEMF %in% df_lan[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_lan[1,]))%>%
+  ggplot(aes(x=year , y=IAMC_Template/1000 ))
+p <- p  + facet_grid( ~ SCENARIO ,scales="fixed",labeller = as_labeller(v_sce))
+p <- p  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p <- p  + scale_fill_manual(values = df_lan[4,], labels = df_lan[2,])
+p <- p　+ geom_hline(yintercept=0,color = "grey")
+p <- p  + labs(x="Year", y="Landuse (billion ha)", fill = "land")
+p <- p　+ my_theme + theme(legend.position = "none", axis.title.x = element_blank())
+png(paste(df_path[df_path$name=="figure",]$path,"main/Landuse.png",sep="/"), width = length(unique(df_iamc$SCENARIO))*1500+1000, height = 3000,res = 300)
+print(p)
+dev.off()
+
+
+i<-"World"
+for (i in v_REMF){
+p1 <- df_iamc%>%
+  filter(REMF==i,YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[1,1]|SCENARIO==df_sce[2,1]|SCENARIO==df_sce[4,1])%>%
+  filter(VEMF %in% df_lan[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_lan[1,]))%>%
+  ggplot(aes(x=year , y=IAMC_Template/1000 ))
+p1 <- p1  + facet_grid( ~ SCENARIO ,scales="fixed",labeller = as_labeller(v_sce))
+p1 <- p1  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p1 <- p1  + scale_fill_manual(values = df_lan[4,], labels = df_lan[2,])
+p1 <- p1　+ geom_hline(yintercept=0,color = "grey")
+p1 <- p1  + labs(x="Year", y="Landuse (billion ha)", fill = "land")
+p1 <- p1　+ my_theme + theme(legend.position = "none", axis.title.x = element_blank())
+
+p2 <- df_iamc%>%
+  filter(REMF==i,YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[2,1]|SCENARIO==df_sce[4,1])%>%
+  select(-c(SCENARIO))%>%
+  filter(VEMF %in% df_lan[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_lan[1,]))%>%
+  pivot_wider(names_from = SCENARIO2, values_from = IAMC_Template)%>%
+  replace(is.na(.), 0)
+colnames(p2)<-c("REMF","VEMF","YEMF","year","SCE1","SCE2")
+p2 <- mutate(p2, IAMC_Template = SCE2-SCE1, SCENARIO=paste(df_sce[2,2],df_sce[4,2], sep=" - "))%>%
+  select(-c(SCE1,SCE2))%>%
+  ggplot(aes(x=year , y= IAMC_Template/1000))
+p2 <- p2  + facet_grid( ~ SCENARIO ,scales="fixed")
+p2 <- p2  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p2 <- p2  + scale_fill_manual(values = df_lan[4,], labels =df_lan[2,])
+p2 <- p2　+ geom_hline(yintercept=0,color = "grey")
+p2 <- p2  + labs(x="Year", y="CO2 emission", fill = "landuse")
+p2 <- p2　+ my_theme + theme(axis.title = element_blank())
+
+png(paste(df_path[df_path$name=="figure",]$path,"/other/",i,"_landuse.png",sep=""), width = 6000, height = 2500,res = 300)
+p <- grid.arrange(p1,p2, layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2,2)))
+print(p)
+dev.off()
+}
 
 
 #TRB----------------------------------------------------------------------------

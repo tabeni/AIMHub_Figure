@@ -1,0 +1,26 @@
+{
+    "id": "822BEA05",
+    "path": "C:/Prog_env/IAM/AIM_Hub_synfuel/R/module/IAMC_fig.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1046100213",
+    "contents": "",
+    "dirty": false,
+    "created": 1701778054790.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "5,39",
+        "scrollLine": "2"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1701774180,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1701774180,
+    "read_only": false,
+    "read_only_alternatives": []
+}

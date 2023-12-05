@@ -1,0 +1,181 @@
+
+#Title: Sub module for IAMC figures
+#Name: Osamu Nishiura
+#Date: 2023/6/17
+
+#Directory preparation----------------------------------------------------------
+
+if (dir.exists("../output/figure/IAMC") == "FALSE") {dir.create("../output/figure/IAMC", recursive = T)}
+
+#Figures------------------------------------------------------------------------
+#Energy-------------------------------------------------------------------------
+p1 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
+  filter(VEMF %in% df_pri[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_pri[1,]))%>%
+  ggplot(aes(x=year , y=IAMC_Template ))
+p1 <- p1  + facet_grid( ~ SCENARIO ,scales="fixed",labeller = as_labeller(v_sce))
+p1 <- p1  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p1 <- p1  + scale_fill_manual(values = df_pri[4,], labels = df_pri[2,])
+p1 <- p1　+ geom_hline(yintercept=0,color = "grey")
+p1 <- p1  + labs(x="Year", y="Primary energy (EJ/year)", fill = "Source")
+p1 <- p1　+ my_theme + theme(legend.position = "none", axis.title.x = element_blank())
+
+p2 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[2,1]|SCENARIO==df_sce[3,1])%>%
+  select(-c(SCENARIO))%>%
+  filter(VEMF %in% df_pri[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_pri[1,]))%>%
+  pivot_wider(names_from = SCENARIO2, values_from = IAMC_Template)%>%
+  replace(is.na(.), 0)
+colnames(p2)<-c("REMF","VEMF","YEMF","year","SCE1","SCE2")
+p2 <- mutate(p2, IAMC_Template = SCE2-SCE1, SCENARIO=paste(df_sce[3,2],df_sce[2,2], sep=" - "))%>%
+  select(-c(SCE1,SCE2))%>%
+  ggplot(aes(x=year , y= IAMC_Template))
+p2 <- p2  + facet_grid( ~ SCENARIO ,scales="fixed")
+p2 <- p2  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p2 <- p2  + scale_fill_manual(values = df_pri[4,], labels = df_pri[2,])
+p2 <- p2　+ geom_hline(yintercept=0,color = "grey")
+p2 <- p2  + labs(x="Year", y="Primary energy (EJ/year)", fill = "Source")
+p2 <- p2　+ my_theme + theme(axis.title = element_blank())
+
+p3 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
+  filter(!(str_detect(VEMF, "^Fin_Ene_Ind_|^Fin_Ene_Tra_|^Fin_Ene_Bui_")))%>%
+  filter(VEMF %in% df_fin[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_fin[1,]))%>%
+  ggplot(aes(x=year , y=IAMC_Template ))
+p3 <- p3  + facet_grid( ~ SCENARIO ,scales="fixed",labeller = as_labeller(v_sce))
+p3 <- p3  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p3 <- p3  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
+p3 <- p3　+ geom_hline(yintercept=0,color = "grey")
+p3 <- p3  + labs(x="Year", y="Final energy (EJ/year)", fill = "Fuel")
+p3 <- p3　+ my_theme + theme(legend.position = "none", axis.title.x = element_blank())
+
+p4 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[2,1]|SCENARIO==df_sce[3,1])%>%
+  select(-c(SCENARIO))%>%
+  filter(!(str_detect(VEMF, "^Fin_Ene_Ind_|^Fin_Ene_Tra_|^Fin_Ene_Bui_")))%>%
+  filter(VEMF %in% df_fin[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_fin[1,]))%>%
+  pivot_wider(names_from = SCENARIO2, values_from = IAMC_Template)%>%
+  replace(is.na(.), 0)
+colnames(p4)<-c("REMF","VEMF","YEMF","year","SCE1","SCE2")
+p4 <- mutate(p4, IAMC_Template = SCE2-SCE1, SCENARIO=paste(df_sce[3,2],df_sce[2,2], sep=" - "))%>%
+  select(-c(SCE1,SCE2))%>%
+  ggplot(aes(x=year , y= IAMC_Template))
+p4 <- p4  + facet_grid( ~ SCENARIO ,scales="fixed")
+p4 <- p4  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p4 <- p4  + scale_fill_manual(values = df_fin[4,], labels = df_fin[2,])
+p4 <- p4　+ geom_hline(yintercept=0,color = "grey")
+p4 <- p4  + labs(x="Year", y="Final energy (EJ/year)", fill = "Fuel")
+p4 <- p4　+ my_theme + theme(axis.title = element_blank())
+
+png(paste(df_path[df_path$name=="figure",]$path,"IAMC/energy.png",sep="/"), width = 5000, height = 2500,res = 300)
+p <- grid.arrange(p1,p2,p3, p4, layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2),c(3,3,3,3,3,3,4,4,4)))
+print(p)
+dev.off()
+
+#Emission----------------------------------------------------------------------
+p1 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015")%>%
+  filter(VEMF %in% df_emi[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_emi[1,]))%>%
+  ggplot(aes(x=year , y=IAMC_Template/1000 ))
+p1 <- p1  + facet_grid( ~ SCENARIO ,scales="fixed",labeller = as_labeller(v_sce))
+p1 <- p1  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p1 <- p1  + geom_line(data=filter(df_iamc,VEMF=="Emi_CO2",REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015"),aes(color=VEMF)) 
+p1 <- p1  + geom_point(data=filter(df_iamc,VEMF=="Emi_CO2",REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015"),aes(color=VEMF)) 
+p1 <- p1  + scale_fill_manual(values = df_emi[4,], labels =df_emi[2,])
+p1 <- p1  + scale_color_manual(values = c("black"), labels =c("Net"))
+p1 <- p1　+ geom_hline(yintercept=0,color = "grey")
+p1 <- p1　+ my_theme +theme(legend.position = "none", axis.title.x = element_blank())
+p1 <- p1 + labs(x="Year", y="CO2 emission (Gt/year)", fill = "source")
+
+p2 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[2,1]|SCENARIO==df_sce[3,1])%>%
+  select(-c(SCENARIO))%>%
+  filter(VEMF %in% df_emi[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_emi[1,]))%>%
+  pivot_wider(names_from = SCENARIO2, values_from = IAMC_Template)%>%
+  replace(is.na(.), 0)
+colnames(p2)<-c("REMF","VEMF","YEMF","year","SCE1","SCE2")
+p2 <- mutate(p2, IAMC_Template = SCE2-SCE1, SCENARIO=paste(df_sce[3,2],df_sce[2,2], sep=" - "))%>%
+  select(-c(SCE1,SCE2))%>%
+  ggplot(aes(x=year , y= IAMC_Template/1000))
+p2 <- p2  + facet_grid( ~ SCENARIO ,scales="fixed")
+p2 <- p2  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p2 <- p2  + scale_fill_manual(values = df_emi[4,], labels =df_emi[2,])
+p2 <- p2　+ geom_hline(yintercept=0,color = "grey")
+p2 <- p2  + labs(x="Year", y="CO2 emission", fill = "Source")
+p2 <- p2　+ my_theme + theme(axis.title = element_blank())
+
+png(paste(df_path[df_path$name=="figure",]$path,"IAMC/emission.png",sep="/"), width = 5000, height = 1500,res = 300)
+p <- grid.arrange(p1,p2, layout_matrix = rbind(c(1,1,1,1,2,2,2)))
+print(p)
+dev.off()
+
+#Landuse------------------------------------------------------------------------
+p1 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[1,1]|SCENARIO==df_sce[4,1]|SCENARIO==df_sce[5,1])%>%
+  filter(VEMF %in% df_lan[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_lan[1,]))%>%
+  ggplot(aes(x=year , y=IAMC_Template/1000 ))
+p1 <- p1  + facet_grid( ~ SCENARIO ,scales="fixed",labeller = as_labeller(v_sce))
+p1 <- p1  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p1 <- p1  + scale_fill_manual(values = df_lan[4,], labels = df_lan[2,])
+p1 <- p1　+ geom_hline(yintercept=0,color = "grey")
+p1 <- p1  + labs(x="Year", y="Landuse (billion ha)", fill = "land")
+p1 <- p1　+ my_theme + theme(legend.position = "none", axis.title.x = element_blank())
+
+p2 <- df_iamc%>%
+  filter(REMF=="World",YEMF!="2005",YEMF!="2010",YEMF!="2015",SCENARIO==df_sce[4,1]|SCENARIO==df_sce[5,1])%>%
+  select(-c(SCENARIO))%>%
+  filter(VEMF %in% df_lan[1,])%>%
+  mutate(VEMF = factor(VEMF, levels=df_lan[1,]))%>%
+  pivot_wider(names_from = SCENARIO2, values_from = IAMC_Template)%>%
+  replace(is.na(.), 0)
+colnames(p2)<-c("REMF","VEMF","YEMF","year","SCE1","SCE2")
+p2 <- mutate(p2, IAMC_Template = SCE2-SCE1, SCENARIO=paste(df_sce[4,2],df_sce[5,2], sep=" - "))%>%
+  select(-c(SCE1,SCE2))%>%
+  ggplot(aes(x=year , y= IAMC_Template/1000))
+p2 <- p2  + facet_grid( ~ SCENARIO ,scales="fixed")
+p2 <- p2  + geom_bar(stat="identity",aes(fill=VEMF)) 
+p2 <- p2  + scale_fill_manual(values = df_lan[4,], labels =df_lan[2,])
+p2 <- p2　+ geom_hline(yintercept=0,color = "grey")
+p2 <- p2  + labs(x="Year", y="CO2 emission", fill = "landuse")
+p2 <- p2　+ my_theme + theme(axis.title = element_blank())
+
+png(paste(df_path[df_path$name=="figure",]$path,"IAMC/landuse.png",sep="/"), width = 5000, height = 2500,res = 300)
+p <- grid.arrange(p1,p2, layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2,2)))
+print(p)
+dev.off()
+
+
+
+
+
+
+
+#Economy------------------------------------------------------------------------
+p <- df_iamc%>%
+  filter(VEMF=="Pol_Cos_GDP_Los_rat"|VEMF=="Pol_Cos_Equ_Var_rat",REMF=="World",YEMF!="2010",YEMF!="2015")%>%
+  bind_rows(df_iamc%>%
+              filter(VEMF=="Prc_Agr_NonEneCro_and_Liv_Ind",SCENARIO!="SSP2_BaU_NoCC",REMF=="World",YEMF!="2010",YEMF!="2015")%>%
+              left_join(df_iamc%>%
+                          filter(VEMF=="Prc_Agr_NonEneCro_and_Liv_Ind",REMF=="World",YEMF!="2010",YEMF!="2015",SCENARIO=="SSP2_BaU_NoCC")%>%
+                          mutate(BaU=IAMC_Template)%>%
+                          select(-c("SCENARIO2","SCENARIO","IAMC_Template"))
+              )%>%
+              mutate(IAMC_Template=	(IAMC_Template/BaU-1)*100)%>%
+              select(-c("BaU")))%>%
+  ggplot(aes(x=year , y = IAMC_Template, color = SCENARIO,group = SCENARIO)) 
+p <- p + facet_wrap(. ~ VEMF, scales="free", nrow=1,labeller = as_labeller(c(Prc_Agr_NonEneCro_and_Liv_Ind="Food price change",Pol_Cos_GDP_Los_rat="GDP loss",Pol_Cos_Cns_Los_rat="Consumption lsos",Pol_Cos_Equ_Var_rat="Equivalent variation")))
+p <- p + geom_line(linewidth = 1.2)
+p <- p + scale_color_hue(labels = c("1.5C_BIO","1.5C_DAC"))
+p <- p + geom_hline(yintercept=0,color = "grey")
+p <- p + labs(x="Year", y="Economic impact (%)",color="Scenarios") 
+p <- p + my_theme + theme(axis.title.x = element_blank())
+png(paste(df_path[df_path$name=="figure",]$path,"IAMC/gdp_ev.png",sep="/"), width = 4000, height = 1200,res = 300)
+print(p)
+dev.off()

@@ -1,0 +1,16 @@
+
+#Title: Sub module for doctoral thesis figures
+#Name: Osamu Nishiura
+#Date: 2023/12/5
+
+#Directory preparation----------------------------------------------------------
+
+if (dir.exists("../output/figure/doc_7") == "FALSE") {dir.create("../output/figure/doc_7", recursive = T)}
+
+#Figures------------------------------------------------------------------------
+
+
+
+
+
+
