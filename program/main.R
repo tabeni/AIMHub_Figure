@@ -28,19 +28,17 @@ df_sce <- data.frame(c("SSP2_BaU_NoCC_No",
                        "SSP2_CurPol_CONT4_NoCC_No",
                        "SSP2_BaU_NoCC",
                        "SSP2_2020NDC_NZE_NoCC"),
-                     c("Baseline",
-                       "400C",
-                       "1100C",
-                       "NDC_gr2",
-                       "NDC",
-                       "NDC_NZE",
-                       "NZE",
-                       "CurPol_gr2",
-                       "CurPol",
-                       "Baseline_TT",
-                       "NDC_NZE_TT"))
-
-
+                     c("ELV-SSP2-BaU",
+                       "ELV-SSP2-650P-400F",
+                       "ELV-SSP2-1150F",
+                       "ELV-SSP2-NDC-D2",
+                       "ELV-SSP2-NDC-D0",
+                       "ELV-SSP2-NDC-LTS",
+                       "ELV-SSP2-LTS",
+                       "ELV-SSP2-CP-D2",
+                       "ELV-SSP2-CP-D0",
+                       "TT-Baseline",
+                       "TT-NDC_LTS"))
 colnames(df_sce) <- c("SCENARIO","SCENARIO2")
 v_sce <- df_sce[[2]]
 names(v_sce) <- df_sce[[1]]
